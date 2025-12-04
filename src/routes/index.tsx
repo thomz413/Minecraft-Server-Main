@@ -14,23 +14,25 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { siFacebook, siInstagram, siTiktok } from "simple-icons";
+import TikTok from "@/components/Tiktok.tsx";
 
 export const Route = createFileRoute("/")({
 	component: Home,
 });
 
-function Home() {
+export default function Home() {
 	// UI state
 	const [scrollY, setScrollY] = useState(0);
+	const [showNavbar, setShowNavbar] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
-	const [playerCount, setPlayerCount] = useState(0);
 	const [copied, setCopied] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 	// refs for performant scroll handling
 	const lastScroll = useRef(0);
 	const ticking = useRef(false);
+	const heroRef = useRef<HTMLElement | null>(null);
 
 	// Debounce search input (300ms)
 	useEffect(() => {
@@ -53,35 +55,33 @@ function Home() {
 				ticking.current = true;
 			}
 		};
-		// passive listener for better perf
 		window.addEventListener("scroll", handleScroll, { passive: true });
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
-	// Animate player count up to target (simple incremental)
+	// show navbar only once scrolled past the hero section
 	useEffect(() => {
-		const target = 1234;
-		if (playerCount >= target) return;
-		const step = Math.max(1, Math.round((target - playerCount) / 12));
-		const id = window.setTimeout(
-			() => setPlayerCount((v) => Math.min(target, v + step)),
-			60,
-		);
-		return () => clearTimeout(id);
-	}, [playerCount]);
+		const heroHeight = heroRef.current?.offsetHeight ?? window.innerHeight;
+		// leave a small margin so header appears just after hero
+		setShowNavbar(scrollY > Math.max(200, heroHeight - 120));
+	}, [scrollY]);
 
-	// socials: removed GitHub & Newsletter; added TikTok, Facebook, Instagram
+	// If the header is hidden, ensure mobile menu is closed
+	useEffect(() => {
+		if (!showNavbar) setMobileMenuOpen(false);
+	}, [showNavbar]);
+
 	const socials = [
 		{ icon: MessageCircle, label: "Discord", link: "#", members: "Follow" },
 		{ icon: Twitter, label: "Twitter", link: "#", members: "Follow" },
 		{ icon: Facebook, label: "Facebook", link: "#", members: "Follow" },
 		{ icon: Instagram, label: "Instagram", link: "#", members: "Follow" },
-		{ icon: siTiktok.svg, label: "TikTok", link: "#", members: "Follow" },
+		{ icon: TikTok, label: "TikTok", link: "#", members: "Follow" },
 	];
 
 	// Commands (kept command names as-is)
 	const commandsByPlugin = {
-		essentials: {
+		enessials: {
 			name: "Essentials",
 			icon: Zap,
 			commands: [
@@ -115,7 +115,7 @@ function Home() {
 
 	const roles = [
 		{
-			name: "Member",
+			name: "Miembro",
 			color: "from-blue-500 to-blue-600",
 			perks: ["Comandos básicos", "Reclamo de terreno", "Acceso a la tienda"],
 		},
@@ -123,13 +123,13 @@ function Home() {
 			name: "VIP",
 			color: "from-purple-500 to-purple-600",
 			perks: [
-				"Todos los beneficios de Member",
+				"Todos los beneficios de Miembro",
 				"Recompensas dobles",
 				"Cola prioritaria",
 			],
 		},
 		{
-			name: "Legend",
+			name: "Leyenda",
 			color: "from-yellow-500 to-orange-600",
 			perks: [
 				"Todos los beneficios de VIP",
@@ -143,7 +143,6 @@ function Home() {
 		try {
 			await navigator.clipboard.writeText("play.craftlegends.net");
 			setCopied(true);
-			// keep an accessible announcement for screen readers
 			const id = setTimeout(() => setCopied(false), 2000);
 			return () => clearTimeout(id);
 		} catch (e) {
@@ -174,224 +173,243 @@ function Home() {
 	);
 
 	return (
-		<main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-			{/* Skip link for keyboard users */}
-			<a
-				href="#main-content"
-				className="sr-only focus:not-sr-only focus:sr-only:static"
-			>
-				Saltar al contenido
-			</a>
+		// outer wrapper should not be <main> twice — use a div and keep a single <main id="main-content"> for semantics
+		<div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+			{/* Navigation — hidden until scrolled past hero */}
+			{showNavbar && (
+				<header
+					className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out transform
+        ${
+					showNavbar
+						? "translate-y-0 opacity-100 bg-background/80 backdrop-blur-xl border-b border-border"
+						: "-translate-y-full opacity-0 pointer-events-none"
+				}
+    `}
+				>
+					<div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+						{/* Logo + title */}
+						<div className="flex items-center gap-3">
+							<img
+								src="/Title.png"
+								alt="CraftLegends"
+								className="h-8 md:h-10 object-contain"
+							/>
+						</div>
 
-			{/* Navigation */}
-			<header className="fixed top-0 w-full bg-background/80 backdrop-blur-xl border-b border-border z-50">
-				<div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-					<h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-						CraftLegends
-					</h1>
-
-					{/* Desktop links */}
-					<nav className="hidden md:flex gap-8" aria-label="Main navigation">
-						<a href="#home" className="hover:text-primary transition">
-							Inicio
-						</a>
-						<a href="#info" className="hover:text-primary transition">
-							Acerca
-						</a>
-						<a href="#commands" className="hover:text-primary transition">
-							Comandos
-						</a>
-						<a href="#roles" className="hover:text-primary transition">
-							Rangos
-						</a>
-						<a href="#socials" className="hover:text-primary transition">
-							Comunidad
-						</a>
-					</nav>
-
-					{/* actions */}
-					<div className="flex items-center gap-3">
-						<button
-							onClick={handleCopyIP}
-							aria-label="Copiar dirección del servidor"
-							className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/50 text-primary rounded-lg hover:bg-primary/30 transition"
-						>
-							<span className="text-sm font-mono" aria-live="polite">
-								{copied ? "¡Copiado!" : "play.craftlegends.net"}
-							</span>
-							<Copy className="w-4 h-4" />
-						</button>
-
-						{/* mobile menu button */}
-						<button
-							onClick={() => setMobileMenuOpen((v) => !v)}
-							aria-expanded={mobileMenuOpen}
-							aria-controls="mobile-menu"
-							className="md:hidden p-2 rounded-lg border border-border bg-card/40"
-						>
-							<svg
-								className="w-6 h-6"
-								viewBox="0 0 24 24"
-								fill="none"
-								aria-hidden
-							>
-								<path
-									d="M4 7h16M4 12h16M4 17h16"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								/>
-							</svg>
-						</button>
-					</div>
-				</div>
-
-				{/* Mobile menu */}
-				{mobileMenuOpen && (
-					<div
-						id="mobile-menu"
-						className="md:hidden border-t border-border bg-background/95 backdrop-blur"
-					>
-						<div className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-3">
-							<a
-								href="#home"
-								onClick={() => setMobileMenuOpen(false)}
-								className="py-2"
-							>
+						{/* Desktop links */}
+						<nav className="hidden md:flex gap-8" aria-label="Main navigation">
+							<a href="#home" className="hover:text-primary transition">
 								Inicio
 							</a>
-							<a
-								href="#info"
-								onClick={() => setMobileMenuOpen(false)}
-								className="py-2"
-							>
+							<a href="#info" className="hover:text-primary transition">
 								Acerca
 							</a>
-							<a
-								href="#commands"
-								onClick={() => setMobileMenuOpen(false)}
-								className="py-2"
-							>
+							<a href="#commands" className="hover:text-primary transition">
 								Comandos
 							</a>
-							<a
-								href="#roles"
-								onClick={() => setMobileMenuOpen(false)}
-								className="py-2"
-							>
+							<a href="#roles" className="hover:text-primary transition">
 								Rangos
 							</a>
-							<a
-								href="#socials"
-								onClick={() => setMobileMenuOpen(false)}
-								className="py-2"
-							>
+							<a href="#socials" className="hover:text-primary transition">
 								Comunidad
 							</a>
+						</nav>
+
+						{/* actions */}
+						<div className="flex items-center gap-3">
 							<button
 								onClick={handleCopyIP}
-								className="mt-2 py-2 bg-primary text-primary-foreground rounded-lg"
+								aria-label="Copiar dirección del servidor"
+								className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/50 text-primary rounded-lg hover:bg-primary/30 transition"
 							>
-								Copiar IP
+								<span className="text-sm font-mono" aria-live="polite">
+									{copied ? "¡Copiado!" : "play.craftlegends.net"}
+								</span>
+								<Copy className="w-4 h-4" />
+							</button>
+
+							{/* mobile menu button */}
+							<button
+								onClick={() => setMobileMenuOpen((v) => !v)}
+								aria-expanded={mobileMenuOpen}
+								aria-controls="mobile-menu"
+								className="md:hidden p-2 rounded-lg border border-border bg-card/40"
+							>
+								<svg
+									className="w-6 h-6"
+									viewBox="0 0 24 24"
+									fill="none"
+									aria-hidden
+								>
+									<path
+										d="M4 7h16M4 12h16M4 17h16"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									/>
+								</svg>
 							</button>
 						</div>
 					</div>
-				)}
-			</header>
 
-			<main id="main-content" className="pt-20">
+					{/* Mobile menu */}
+					{mobileMenuOpen && showNavbar && (
+						<div
+							id="mobile-menu"
+							className="md:hidden border-t border-border bg-background/95 backdrop-blur"
+						>
+							<div className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-3">
+								<a
+									href="#home"
+									onClick={() => setMobileMenuOpen(false)}
+									className="py-2"
+								>
+									Inicio
+								</a>
+								<a
+									href="#info"
+									onClick={() => setMobileMenuOpen(false)}
+									className="py-2"
+								>
+									Acerca
+								</a>
+								<a
+									href="#commands"
+									onClick={() => setMobileMenuOpen(false)}
+									className="py-2"
+								>
+									Comandos
+								</a>
+								<a
+									href="#roles"
+									onClick={() => setMobileMenuOpen(false)}
+									className="py-2"
+								>
+									Rangos
+								</a>
+								<a
+									href="#socials"
+									onClick={() => setMobileMenuOpen(false)}
+									className="py-2"
+								>
+									Comunidad
+								</a>
+								<button
+									onClick={handleCopyIP}
+									className="mt-2 py-2 bg-primary text-primary-foreground rounded-lg"
+								>
+									Copiar IP
+								</button>
+							</div>
+						</div>
+					)}
+				</header>
+			)}
+
+			<main id="main-content">
 				{/* Hero Section */}
 				<section
 					id="home"
-					className="relative min-h-screen flex items-center justify-center overflow-hidden"
+					ref={heroRef}
+					className="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden py-12 md:py-24"
 				>
+					{/* --- WALLPAPER BACKGROUND --- */}
 					<div
-						className="absolute inset-0 bg-gradient-to-b from-primary/20 via-background to-background pointer-events-none"
-						style={{ transform: `translateY(${scrollY * 0.5}px)` }}
-						aria-hidden
+						className="absolute inset-0 z-0 overflow-hidden"
+						style={{ willChange: "transform" }}
+					>
+						<img
+							src="/Background.jpg"
+							alt=""
+							aria-hidden="true"
+							loading="eager"
+							decoding="async"
+							className="w-full h-full object-cover"
+							style={{
+								transform: `translateY(${scrollY * 0.25}px)`,
+								willChange: "transform",
+							}}
+						/>
+					</div>
+
+					{/* --- GRADIENT OVERLAY (perfect text contrast) --- */}
+					<div
+						className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/60 pointer-events-none z-5"
+						style={{ transform: `translateY(${scrollY * 0.4}px)` }}
 					/>
-					<div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-					<div className="absolute bottom-20 right-10 w-72 h-72 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
 
-					<div className="relative z-10 text-center max-w-4xl px-6">
-						<h2 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-							Bienvenido a{" "}
-							<span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-								CraftLegends
-							</span>
-						</h2>
+					{/* --- DECORATIVE BLOBS --- */}
+					<div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+						<div className="absolute top-16 left-6 md:left-10 w-56 h-56 md:w-72 md:h-72 bg-primary/30 rounded-full blur-3xl" />
+						<div className="absolute bottom-12 right-6 md:right-10 w-56 h-56 md:w-72 md:h-72 bg-secondary/30 rounded-full blur-3xl" />
+					</div>
 
-						<p className="text-lg md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+					{/* --- MAIN CONTENT --- */}
+					<div className="relative z-20 text-center max-w-5xl px-6 sm:px-8">
+						<h1 className="flex flex-col items-center gap-3 md:gap-6 text-3xl md:text-5xl font-extrabold mb-8 drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)] pb-5">
+							<span className="block">Bienvenido a</span>
+							<img
+								src="/Title.png"
+								alt="Titulo del servidor"
+								loading="lazy"
+								className="w-48 sm:w-64 md:w-80 lg:w-[520px] h-auto object-contain mx-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)]"
+							/>
+						</h1>
+
+						<p className="text-lg md:text-xl text-white mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_3px_8px_rgba(0,0,0,0.9)]">
 							La experiencia multijugador definitiva de Minecraft. Construye,
 							explora y conquista con miles de jugadores en todo el mundo.
 						</p>
 
-						<div className="bg-card border-2 border-primary/50 rounded-xl p-6 mb-6 max-w-md mx-auto">
-							<p className="text-muted-foreground text-sm mb-2">
-								Dirección del servidor
-							</p>
-							<div className="flex items-center gap-2">
-								<code className="flex-1 text-lg md:text-2xl font-mono font-bold text-primary">
-									play.craftlegends.net
-								</code>
+						{/* Server IP */}
+						<div className="mx-auto mb-10 max-w-md">
+							<div className="bg-card/80 backdrop-blur-md border border-primary/40 rounded-xl p-5 md:p-6 shadow-xl flex items-center gap-4">
+								<div className="flex-1 text-left">
+									<p className="text-muted-foreground text-xs mb-1">
+										Dirección del servidor
+									</p>
+									<code className="block text-lg md:text-2xl font-mono font-bold text-primary truncate">
+										play.craftlegends.net
+									</code>
+								</div>
+
 								<button
 									onClick={handleCopyIP}
-									className="p-3 hover:bg-primary/10 rounded-lg transition"
-									aria-label="Copiar IP del servidor"
+									className="inline-flex items-center justify-center p-3 rounded-lg transition hover:scale-105 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary"
 								>
 									{copied ? (
 										<Check className="w-6 h-6 text-primary" />
 									) : (
-										<Copy className="w-6 h-6 text-muted-foreground hover:text-primary" />
+										<Copy className="w-6 h-6 text-muted-foreground" />
 									)}
 								</button>
 							</div>
-							{/* live region for screen reader confirmation */}
+
 							<div aria-live="polite" className="sr-only">
 								{copied ? "Dirección copiada" : ""}
 							</div>
 						</div>
 
-						<div className="flex gap-4 justify-center mb-12 flex-wrap">
+						{/* Buttons */}
+						<div className="flex flex-col sm:flex-row items-center gap-4 justify-center mb-16">
 							<a
-								className="px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:scale-105 transition-transform"
+								className="px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:scale-[1.03] transition"
 								href="#commands"
 							>
 								Jugar ahora
 							</a>
 							<a
-								className="px-8 py-3 bg-card border border-border text-foreground font-semibold rounded-lg hover:bg-card/80 transition"
+								className="px-8 py-3 bg-card/80 backdrop-blur border border-border text-foreground font-semibold rounded-lg shadow hover:bg-card/60 transition"
 								href="#info"
 							>
 								Más información
 							</a>
 						</div>
 
-						{/* Stats */}
-						<div className="grid grid-cols-3 gap-6 md:gap-12 mt-12">
-							<div className="space-y-2">
-								<p className="text-3xl md:text-4xl font-bold text-primary">
-									{playerCount.toLocaleString()}
-								</p>
-								<p className="text-muted-foreground">Jugadores activos</p>
-							</div>
-							<div className="space-y-2">
-								<p className="text-3xl md:text-4xl font-bold text-secondary">
-									24/7
-								</p>
-								<p className="text-muted-foreground">Tiempo de actividad</p>
-							</div>
-							<div className="space-y-2">
-								<p className="text-3xl md:text-4xl font-bold text-primary">
-									50ms
-								</p>
-								<p className="text-muted-foreground">Ping promedio</p>
-							</div>
-						</div>
-
-						<div className="mt-12 animate-bounce">
-							<ChevronDown className="mx-auto w-8 h-8 text-primary" />
+						{/* Scroll Indicator */}
+						<div className="motion-safe:animate-bounce mx-auto w-fit">
+							<ChevronDown className="w-8 h-8 text-primary drop-shadow-xl" />
 						</div>
 					</div>
 				</section>
@@ -401,8 +419,8 @@ function Home() {
 					<h2 className="text-3xl md:text-5xl font-bold mb-10 text-center">
 						Acerca de CraftLegends
 					</h2>
-					<div className="grid md:grid-cols-2 gap-12 mb-16">
-						<div className="space-y-6">
+					<div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+						<div className="space-y-6 text-center md:text-left">
 							<h3 className="text-2xl font-bold">¿Por qué unirte?</h3>
 							<p className="text-muted-foreground leading-relaxed">
 								CraftLegends es una comunidad próspera de Minecraft dedicada a
@@ -425,7 +443,7 @@ function Home() {
 							</ul>
 						</div>
 
-						<div className="grid grid-cols-2 gap-6">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 place-items-center justify-center w-full">
 							{[
 								{ label: "Tamaño del mundo", value: "Ilimitado" },
 								{ label: "Versión", value: "1.20.4" },
@@ -434,7 +452,7 @@ function Home() {
 							].map((stat, i) => (
 								<div
 									key={i}
-									className="p-6 bg-card border border-border rounded-lg text-center"
+									className="p-6 bg-card border border-border rounded-lg text-center w-full max-w-xs mx-auto"
 								>
 									<p className="text-sm text-muted-foreground mb-2">
 										{stat.label}
@@ -481,33 +499,64 @@ function Home() {
 					</div>
 				</section>
 
-				{/* Quick start */}
-				<section className="py-16 px-6 max-w-7xl mx-auto bg-card/50 border-y border-border">
-					<h2 className="text-3xl md:text-5xl font-bold mb-8 text-center">
+				{/* Quick Start */}
+				<section className="py-20 px-6 max-w-7xl mx-auto bg-card/40 backdrop-blur-sm border-y border-border/50">
+					<h2 className="text-4xl md:text-6xl font-extrabold mb-4 text-center">
 						Inicio rápido
 					</h2>
-					<div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+					<p className="text-muted-foreground text-center max-w-xl mx-auto mb-14">
+						Únete al servidor en menos de un minuto. No necesitas registro ni
+						mods.
+					</p>
+
+					<div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
 						{[
 							{ step: "1", title: "Copiar IP", desc: "play.craftlegends.net" },
 							{
 								step: "2",
 								title: "Agregar servidor",
-								desc: "Pega en tu launcher de Minecraft",
+								desc: "Pega la IP en tu launcher de Minecraft",
 							},
 							{
 								step: "3",
 								title: "Unirse y jugar",
-								desc: "¡Aparece y empieza tu aventura!",
+								desc: "¡Aparece en el mundo y empieza tu aventura!",
 							},
 						].map((item, i) => (
-							<div key={i} className="text-center">
-								<div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-									<span className="text-2xl font-bold text-primary-foreground">
-										{item.step}
-									</span>
+							<div
+								key={i}
+								className="
+          group relative text-center p-8 rounded-2xl border border-border/60
+          bg-card/60 shadow-sm hover:shadow-xl transition-all duration-300
+          hover:-translate-y-1
+        "
+							>
+								{/* Circle */}
+								<div
+									className="
+          absolute -top-6 left-1/2 -translate-x-1/2
+          w-20 h-20 rounded-full flex items-center justify-center
+          bg-gradient-to-br from-primary to-secondary
+          text-primary-foreground font-extrabold text-3xl
+          ring-4 ring-background shadow-md
+        "
+								>
+									{item.step}
 								</div>
-								<h3 className="font-bold text-lg mb-2">{item.title}</h3>
-								<p className="text-muted-foreground text-sm">{item.desc}</p>
+
+								<div className="mt-10">
+									<h3 className="font-semibold text-xl mb-2">{item.title}</h3>
+									<p className="text-muted-foreground text-sm">{item.desc}</p>
+								</div>
+
+								{/* Glow hover */}
+								<div
+									className="
+            absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20
+            bg-gradient-to-br from-primary to-secondary
+            blur-xl transition-opacity duration-300
+          "
+								/>
 							</div>
 						))}
 					</div>
@@ -637,6 +686,6 @@ function Home() {
 					</div>
 				</footer>
 			</main>
-		</main>
+		</div>
 	);
 }
