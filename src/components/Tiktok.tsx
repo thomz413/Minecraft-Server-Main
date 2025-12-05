@@ -1,4 +1,5 @@
 // TikTok icon
+// todo Think later if its even a good idea to make encapsulate the socials icons with the primary color of the server isntead of their normal self
 export default function TikTok({
 	className = "w-10 h-10 mx-auto mb-1 group-hover:scale-110 transition-transform",
 	...props
