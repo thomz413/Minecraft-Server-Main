@@ -244,8 +244,9 @@ function Home(): JSX.Element {
                         </h1>
 
                         <p className="text-lg md:text-xl text-white mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_3px_8px_rgba(0,0,0,0.9)]">
-                            La experiencia multijugador definitiva de Minecraft. Construye, explora y conquista con miles de jugadores en todo el mundo.
+                            Juega, construye y explora con una comunidad cercana y activa.
                         </p>
+
 
                         {/* Server IP */}
                         <div className="mx-auto mb-10 max-w-md">

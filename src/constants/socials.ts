@@ -42,7 +42,7 @@ export const socials: Social[] = [
         link: "#",
         members: "Seguir",
         // TikTok brand uses black + cyan/magenta accents; a dark card with an accent gradient looks nice
-        bg: "linear-gradient(135deg,#010101 0%,#010101 60%,#69C9D0 61%,#EE1D52 100%)",
+        bg: "linear-gradient(135deg, #000000 0%, #111111 40%, #69C9D0 65%, #EE1D52 100%)",
         textColor: "#ffffff",
     },
 ];
