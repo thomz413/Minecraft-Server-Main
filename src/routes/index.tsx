@@ -343,7 +343,7 @@ function Home(): JSX.Element {
                     <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
                         {[
                             { step: "1", title: "Copiar IP", desc: SERVER_IP },
-                            { step: "2", title: "Agregar servidor", desc: "Pega la IP en tu launcher de Minecraft" },
+                            { step: "2", title: "Agregar servidor", desc: "Pega el IP en tu la seccion de servidores" },
                             { step: "3", title: "Unirse y jugar", desc: "¡Aparece en el mundo y empieza tu aventura!" },
                         ].map((item, i) => (
                             <div key={i} className="group relative text-center p-8 rounded-2xl border border-border/60 bg-card/60 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -445,18 +445,42 @@ function Home(): JSX.Element {
                 {/* Socials */}
                 <section id="socials" className="py-20 px-6 max-w-7xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-bold mb-8 text-center">Únete a nuestra comunidad</h2>
-                    <div className="grid md:grid-cols-5 gap-6 max-w-5xl mx-auto mb-12">
+
+                    <div className="grid md:grid-cols-4 sm:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
                         {socials.map((social, i) => (
-                            <a key={i} href={social.link} className="p-6 bg-card border border-border rounded-lg hover:border-primary hover:bg-card/80 transition text-center group" aria-label={social.label}>
-                                <div className="mx-auto mb-3">
-                                    <social.icon className="w-10 h-10 text-primary mx-auto mb-1 group-hover:scale-110 transition-transform" />
+                            <a
+                                key={i}
+                                href={social.link}
+                                className="relative overflow-hidden rounded-lg p-6 shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] focus:outline-none focus-visible:ring-4"
+                                // apply brand background (supports solid color or CSS gradient from the data)
+                                style={{
+                                    background: social.bg,
+                                    color: social.textColor ?? "#ffffff",
+                                    // subtle fallback for better contrast when a solid hex is passed
+                                    border: "1px solid rgba(255,255,255,0.06)",
+                                }}
+                                aria-label={social.label}
+                            >
+                                {/* soft dark overlay to improve text readability on crazy gradients */}
+                                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.12))" }} />
+
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <div className="mb-3 w-12 h-12 rounded-full flex items-center justify-center bg-white/12 backdrop-blur-sm">
+                                        {/* icon is white (or inherit) and visually centered */}
+                                        <social.icon className="w-6 h-6" aria-hidden />
+                                    </div>
+
+                                    <h3 className="font-bold text-lg mb-1">{social.label}</h3>
+                                    <p className="text-sm opacity-90">{social.members}</p>
                                 </div>
-                                <h3 className="font-bold text-lg mb-1">{social.label}</h3>
-                                <p className="text-muted-foreground text-sm">{social.members}</p>
+
+                                {/* subtle decorative accent: top-left blur */}
+                                <div className="pointer-events-none absolute -top-10 -left-10 w-36 h-36 rounded-full opacity-20 filter blur-2xl" style={{ background: "rgba(255,255,255,0.06)" }} />
                             </a>
                         ))}
                     </div>
                 </section>
+
 
                 {/* Footer */}
                 <footer className="py-12 px-6 bg-card border-t border-border">
