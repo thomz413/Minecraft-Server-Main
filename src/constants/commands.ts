@@ -2,7 +2,7 @@ import { Trophy, Users, Zap } from "lucide-react";
 
 type Command = { name: string; desc: string };
 type Plugin = { name: string; icon: any; commands: Command[] };
-type PluginMap = Record<string, Plugin>;
+export type PluginMap = Record<string, Plugin>;
 
 export const commandsByPlugin: PluginMap = {
 	essentials: {

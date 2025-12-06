@@ -8,11 +8,16 @@ import {
 	Users,
 	Zap,
 } from "lucide-react";
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { type JSX, useMemo, useRef, useState } from "react";
 import { commandsByPlugin } from "@/constants/commands.ts";
 import { SERVER_IP } from "@/constants/constants.ts";
 import { roles } from "@/constants/roles.ts";
 import { socials } from "@/constants/socials.ts";
+import { filterCommands } from "@/hooks/filterCommands.ts";
+import { useCopyWithTimeout } from "@/hooks/useCopyWithTimeout.ts";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue.ts";
+import { useNavbarVisibility } from "@/hooks/useNavbarVisibility.ts";
+import { useScrollPosition } from "@/hooks/useScrollPosition.ts";
 
 export const Route = createFileRoute("/")({
 	component: Home,
@@ -20,111 +25,28 @@ export const Route = createFileRoute("/")({
 
 function Home(): JSX.Element {
 	// UI state
-	const [scrollY, setScrollY] = useState(0);
-	const [showNavbar, setShowNavbar] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [debouncedQuery, setDebouncedQuery] = useState("");
-	const [copied, setCopied] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	// refs for performant scroll handling
-	const lastScroll = useRef(0);
-	const ticking = useRef(false);
 	const heroRef = useRef<HTMLElement | null>(null);
 
-	// ref to manage copy timeout so it can be cleared on unmount
-	const copyTimeoutRef = useRef<number | null>(null);
+	const scrollY = useScrollPosition();
+	const showNavbar = useNavbarVisibility(scrollY, heroRef);
+	const debouncedQuery = useDebouncedValue(searchQuery, 300);
+	const { copied, copy } = useCopyWithTimeout(2000);
 
-	// Debounce search input (300ms)
-	useEffect(() => {
-		const id = window.setTimeout(
-			() => setDebouncedQuery(searchQuery.trim().toLowerCase()),
-			300,
-		);
-		return () => clearTimeout(id);
-	}, [searchQuery]);
-
-	// Efficient scroll listener using requestAnimationFrame
-	useEffect(() => {
-		const handleScroll = () => {
-			lastScroll.current = window.scrollY || window.pageYOffset;
-			if (!ticking.current) {
-				window.requestAnimationFrame(() => {
-					setScrollY(lastScroll.current);
-					ticking.current = false;
-				});
-				ticking.current = true;
-			}
-		};
-		window.addEventListener("scroll", handleScroll, { passive: true });
-		return () => window.removeEventListener("scroll", handleScroll);
-	}, []);
-
-	// show navbar only once scrolled past the hero section
-	useEffect(() => {
-		const heroHeight = heroRef.current?.offsetHeight ?? window.innerHeight;
-		// leave a small margin so header appears just after hero
-		setShowNavbar(scrollY > Math.max(200, heroHeight - 120));
-	}, [scrollY]);
-
-	// If the header is hidden, ensure mobile menu is closed
-	useEffect(() => {
-		if (!showNavbar) setMobileMenuOpen(false);
-	}, [showNavbar]);
-
-	// cleanup for copy timeout on unmount
-	useEffect(() => {
-		return () => {
-			if (copyTimeoutRef.current != null) {
-				clearTimeout(copyTimeoutRef.current);
-			}
-		};
-	}, []);
-
-	const handleCopyIP = async () => {
-		try {
-			await navigator.clipboard.writeText(SERVER_IP);
-			setCopied(true);
-			// clear any previous timeout
-			if (copyTimeoutRef.current != null) {
-				clearTimeout(copyTimeoutRef.current);
-			}
-			copyTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
-		} catch (e) {
-			// optional: fallback for older browsers or show a small toast
-			console.warn("Clipboard write failed", e);
-		}
-	};
-
-	/* ----- Filter commands using debounced query (memoized) ----- */
-	const filteredCommands = useMemo(() => {
-		if (!debouncedQuery) {
-			// return shallow copy so components rendering using Object.entries() are stable
-			return Object.fromEntries(Object.entries(commandsByPlugin));
-		}
-
-		return Object.fromEntries(
-			Object.entries(commandsByPlugin).map(([key, plugin]) => [
-				key,
-				{
-					...plugin,
-					commands: plugin.commands.filter((cmd) => {
-						const q = debouncedQuery;
-						return (
-							cmd.name.toLowerCase().includes(q) ||
-							cmd.desc.toLowerCase().includes(q)
-						);
-					}),
-				},
-			]),
-		);
-	}, [debouncedQuery]);
+	const filteredCommands = useMemo(
+		() => filterCommands(commandsByPlugin, debouncedQuery),
+		[debouncedQuery],
+	);
 
 	const hasAnyCommand = useMemo(
-		() => Object.values(filteredCommands).some((p) => p.commands.length > 0),
+		() =>
+			Object.values(filteredCommands).some((p: any) => p.commands.length > 0),
 		[filteredCommands],
 	);
 
+	const handleCopyIP = () => copy(SERVER_IP);
 	return (
 		<div className="min-h-screen bg-background text-foreground overflow-x-hidden">
 			{/* Navigation — hidden until scrolled past hero */}
@@ -141,7 +63,7 @@ function Home(): JSX.Element {
 						<div className="flex items-center gap-3">
 							<img
 								src="/Title.png"
-								alt="CraftLegends"
+								alt="ServidorAqui"
 								className="h-8 md:h-10 object-contain"
 							/>
 						</div>
@@ -421,11 +343,11 @@ function Home(): JSX.Element {
 					</h2>
 					<div className="grid md:grid-cols-3 gap-8">
 						{[
-                            {
-                                icon: Trophy,
-                                title: "Minijuegos y eventos",
-                                desc: "Disfruta de desafíos rápidos, concursos y eventos únicos cada semana.",
-                            },
+							{
+								icon: Trophy,
+								title: "Minijuegos y eventos",
+								desc: "Disfruta de desafíos rápidos, concursos y eventos únicos cada semana.",
+							},
 							{
 								icon: Users,
 								title: "Clanes y equipos",
