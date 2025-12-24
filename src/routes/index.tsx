@@ -62,9 +62,9 @@ function Home(): JSX.Element {
 						{/* Logo + title */}
 						<div className="flex items-center gap-3">
 							<img
-								src="/Title.png"
+								src="/BlockyTitle.webp"
 								alt="ServidorAqui"
-								className="h-8 md:h-10 object-contain"
+								className="h-6 md:h-10 object-contain"
 							/>
 						</div>
 
@@ -222,7 +222,7 @@ function Home(): JSX.Element {
 						<h1 className="flex flex-col items-center gap-3 md:gap-6 text-3xl md:text-5xl font-extrabold mb-8 drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)] pb-5">
 							<span className="block">Bienvenido a</span>
 							<img
-								src="/Title.png"
+								src="/TitleImage.png"
 								alt="Titulo del servidor"
 								loading="lazy"
 								className="w-48 sm:w-64 md:w-80 lg:w-[520px] h-auto object-contain mx-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)]"
