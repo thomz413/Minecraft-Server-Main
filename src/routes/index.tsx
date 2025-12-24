@@ -9,7 +9,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { type JSX, useMemo, useRef, useState } from "react";
-import { commandsByPlugin } from "@/constants/commands.ts";
+import { commandsByPlugin, type Plugin } from "@/constants/commands.ts";
 import { SERVER_IP } from "@/constants/constants.ts";
 import { roles } from "@/constants/roles.ts";
 import { socials } from "@/constants/socials.ts";
@@ -42,7 +42,7 @@ function Home(): JSX.Element {
 
 	const hasAnyCommand = useMemo(
 		() =>
-			Object.values(filteredCommands).some((p: any) => p.commands.length > 0),
+			Object.values(filteredCommands).some((p: Plugin) => p.commands.length > 0),
 		[filteredCommands],
 	);
 

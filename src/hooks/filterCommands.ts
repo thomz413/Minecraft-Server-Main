@@ -1,6 +1,7 @@
-import type { PluginMap } from "@/constants/commands.ts";
+import type {Command, PluginMap} from "@/constants/commands.ts";
 
 export function filterCommands(commandsByPlugin: PluginMap, query: string) {
+
 	if (!query) return commandsByPlugin;
 
 	const q = query.toLowerCase();
@@ -11,7 +12,7 @@ export function filterCommands(commandsByPlugin: PluginMap, query: string) {
 			{
 				...plugin,
 				commands: plugin.commands.filter(
-					(cmd: any) =>
+					(cmd: Command) =>
 						cmd.name.toLowerCase().includes(q) ||
 						cmd.desc.toLowerCase().includes(q),
 				),

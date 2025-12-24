@@ -1,7 +1,17 @@
-import { Trophy, Users, Zap } from "lucide-react";
+import {type LucideProps, Trophy, Users, Zap} from "lucide-react";
+import {type ForwardRefExoticComponent, type RefAttributes} from "react";
 
-type Command = { name: string; desc: string };
-type Plugin = { name: string; icon: any; commands: Command[] };
+export type Command = {
+	name: string;
+	desc: string
+};
+
+export type Plugin = {
+	name: string;
+	icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
+	commands: Command[];
+};
+
 export type PluginMap = Record<string, Plugin>;
 
 export const commandsByPlugin: PluginMap = {
